@@ -38,13 +38,13 @@ nb plugin install nonebot_plugin_zyk_music
 
 - #### 设置本地代理端口
 ```
-set_port:10809
+set_mport:10809
 ```
 >#### :zap:
 >#### 附功能
 > 无代理模式
 > ```
-> set_port:None
+> set_mport:None
 > ```
 > **注意，None开头为大写**
 
