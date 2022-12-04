@@ -9,7 +9,7 @@ headers = {
 
 
 def get_userid(event):
-    """获取用户ID"""
+    """获取用户或群聊ID"""
     info = str(event.get_session_id())
     try:
         res = findall(r"group_(?P<group_id>\d+)_(?P<member_id>\d+)", info)[0]
