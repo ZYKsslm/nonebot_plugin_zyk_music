@@ -17,9 +17,9 @@ nb plugin install nonebot_plugin_zyk_music
 ## :wrench: env配置
 配置项并不多，只有一个，而且是选填
 
-|       Name       |                    Example                    | Type |  Usage   |
-|:----------------:|:---------------------------------------------:|:----:|:--------:|
-| music_proxy_port |                     10809                     | int  |  本地代理端口  |
+|       Name       | Example |      Type       | Usage  |
+|:----------------:|:-------:|:---------------:|:------:|
+| music_proxy_port |  None   | int or NoneType | 本地代理端口 |
 
 当你电脑开了梯子的时候则需要填写代理使用的的本地端口*或使用指令发送给机器人*，并确保开着代理，不然可能发送不了请求 *（报EOF相关的错误）*
 
