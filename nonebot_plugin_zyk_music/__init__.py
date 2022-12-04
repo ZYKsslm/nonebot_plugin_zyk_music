@@ -22,11 +22,7 @@ init(autoreset=True)
 
 # 获取全局配置
 try:
-    port = get_driver().config.music_port
-    proxies = {
-        "http://": f"http://127.0.0.1:{port}",
-        "https://": f"http://127.0.0.1:{port}"
-    }
+    port = get_driver().config.music_proxy_port
 except AttributeError:
     try:
         # 尝试导入我另一个插件的配置
@@ -38,6 +34,20 @@ except AttributeError:
             "http://": f"http://127.0.0.1:{port}",
             "https://": f"http://127.0.0.1:{port}"
         }
+else:
+    if port == "None":
+        proxies = None
+    else:
+        try:
+            int(port)
+        except ValueError:
+            logger.warning(Fore.LIGHTYELLOW_EX + "配置不规范，获取全局配置失败")
+            proxies = None
+        else:
+            proxies = {
+                "http://": f"http://127.0.0.1:{port}",
+                "https://": f"http://127.0.0.1:{port}"
+            }
 
 logger.success(Fore.LIGHTGREEN_EX + f"成功导入本插件，插件版本为{__version__}")
 
@@ -73,43 +83,59 @@ async def _(regex: tuple = RegexGroup()):
 
 @music_matcher.handle()
 async def _(state: T_State, regex: dict = RegexDict()):
+    # 保存音乐信息
     source = regex["source"]
     name = regex["name"]
     state["music_source"] = source
     state["music_name"] = name
 
     music_info = await get_music(source=source, name=name, mode="list", proxies=proxies)
-    if music_info[0] is False:
-        logger.error(f"'{name}'获取失败：{music_info[1]}")
-        await music_matcher.finish(f"'{name}'获取失败")
 
-    await music_matcher.send(music_info[1])
+    if music_info[0] is False:
+        logger.error(Fore.LIGHTRED_EX + f"'{name}'搜索失败：{music_info[1]}")
+        await music_matcher.finish(f"'{name}'搜索失败")
+    else:
+        await music_matcher.send(music_info[1])
 
 
 @music_matcher.got(key="n")
 async def _(bot: Bot, event: Event, state: T_State, n: Message = Arg("n")):
+    n = str(n)
+    try:
+        int(n)
+    except ValueError:
+        await music_matcher.finish("已取消点歌")
+    else:
+        n = int(n)
+
+    # 获取音乐信息
     name = state["music_name"]
     source = state["music_source"]
+
+    # 获取会话信息
     data = get_userid(event)
 
-    info = await get_music(source=source, name=name, n=int(str(n)), mode="download", proxies=proxies)
+    info = await get_music(source=source, name=name, n=n, mode="download", proxies=proxies)
 
     if info[0] is False:
-        logger.error(f"'{name}'获取失败：{info[1]}")
+        logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败：{info[1]}")
         await music_matcher.finish(f"'{name}'获取失败")
 
+    # 获取实际音乐名
     name = info[2]
 
     # 下载音乐
     music_headers = [f"User-Agent={UserAgent().random}"]
-    logger.info(Fore.LIGHTCYAN_EX + f"开始下载'{name}'")
+    logger.info(Fore.LIGHTCYAN_EX + f"开始下载'{name}'\nsource={source}")
+
     try:
         file = (await bot.download_file(url=info[1], headers=music_headers, thread_count=30))["file"]
     except Exception as error:
-        logger.error(f"'{name}'获取失败：{error}")
+        logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败：{error}")
         await music_matcher.finish(f"'{name}'获取失败")
     else:
         logger.success(Fore.LIGHTGREEN_EX + f"'{name}'下载成功")
+
         # 上传音乐
         if data[0] == "group":
             await bot.upload_group_file(group_id=data[1], file=file, name=f"{name}.mp3")
