@@ -1,6 +1,6 @@
 # :memo: nonebot_plugin_zyk_music
 
-**本插件是由我一个音乐下载工具所改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
+**本插件是我一个音乐下载工具改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
 
 *:page_facing_up: 使用本插件前请仔细阅读README，文档中写明的问题一律不回答*
 
