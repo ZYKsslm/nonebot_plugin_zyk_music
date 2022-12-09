@@ -2,7 +2,7 @@
 
 **本插件是我一个音乐下载工具改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
 
-*:page_facing_up: 使用本插件前请仔细阅读README，文档中写明的问题一律不回答*
+*:page_facing_up: 使用本插件前请仔细阅读README*
 
 ## 安装方式
 - #### 使用pip
@@ -21,7 +21,7 @@ nb plugin install nonebot_plugin_zyk_music
 |:----------------:|:---------:|:----------:|:------:|
 | music_proxy_port | None(str) | int or str | 本地代理端口 |
 
-当你电脑开了梯子的时候则需要填写代理使用的的本地端口*或使用指令发送给机器人*，并确保开着代理，不然可能发送不了请求 *（报EOF相关的错误）*
+当你电脑开了梯子的时候则需要填写代理使用的的本地端口*或使用指令发送给机器人*，并确保开着代理，不然可能请求异常 *（报EOF相关的错误）*
 
 如果你使用了我的另一个插件[nonebot_plugin_zyk_novelai](https://github.com/ZYKsslm/nonebot_plugin_zyk_novelai)，并配置了其本地代理端口时，则本插件不需要再另外配置
 
@@ -40,11 +40,20 @@ nb plugin install nonebot_plugin_zyk_music
 ```
 set_mport:10809
 ```
+>或直接在env配置文件中填写
+> ```
+> music_proxy_port=10809
+> ```
+
 >#### :zap:
 >#### 附功能
 > 无代理模式
 > ```
 > set_mport:None
+> ```
+> 或直接在env配置文件中填写
+> ```
+> music_proxy_port=None
 > ```
 > **注意，None开头为大写**
 
@@ -91,6 +100,6 @@ qq | QQ点歌 name
 
 
 ---
-:bug: 如果发现插件有BUG，欢迎**合理**提*Issue*
+:bug: 如果发现插件有BUG或有建议，欢迎**合理**提*Issue*
 
 :heart: 最后，如果你喜欢本插件，就请给本插件点个:star:吧
