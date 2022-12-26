@@ -36,28 +36,28 @@ nb plugin install nonebot_plugin_zyk_music
 - [x] 酷我音乐
 - [x] 咪咕音乐
 
-- #### 设置本地代理端口
+### 设置本地代理端口
 ```
 set_mport:10809
 ```
->或直接在env配置文件中填写
-> ```
-> music_proxy_port=10809
-> ```
+或直接在env配置文件中填写
+ ```
+music_proxy_port=10809
+ ```
 
->#### :zap:
->#### 附功能
-> 无代理模式
-> ```
-> set_mport:None
-> ```
-> 或直接在env配置文件中填写
-> ```
-> music_proxy_port=None
-> ```
-> **注意，None开头为大写**
+#### :zap:
+#### 附功能
+无代理模式
+```
+set_mport:None
+```
+或直接在env配置文件中填写
+```
+music_proxy_port=None
+```
+**注意，None开头为大写**
 
-- #### QQ点歌
+### QQ点歌
 ```
 qq | QQ点歌 name
 
@@ -65,7 +65,7 @@ qq | QQ点歌 name
     qq点歌 stay
 ```
 
-- #### 酷狗点歌
+### 酷狗点歌
 ```
 酷狗 | kg点歌 name
 
@@ -73,7 +73,7 @@ qq | QQ点歌 name
     kg点歌 stay
 ```
 
-- #### 酷我点歌
+### 酷我点歌
 ```
 酷我 | kw点歌 name
 
@@ -81,7 +81,7 @@ qq | QQ点歌 name
     kw点歌 stay
 ```
 
-- #### 网易云点歌
+### 网易云点歌
 ```
 网易云 | 网易 | wy点歌 name
 
@@ -89,7 +89,7 @@ qq | QQ点歌 name
     wy点歌 stay
 ```
 
-- #### 咪咕点歌
+### 咪咕点歌
 ```
 咪咕 | mg点歌 name
 
