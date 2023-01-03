@@ -94,7 +94,7 @@ async def qq_get_music(name, n=None, proxies=None):
         for i in music_info:
             num += 1
             music_name = i["song"]
-            singers = i["singers"]
+            singers = i["singers"][0]
 
             music_list += f"\n{num}.{music_name}-{singers}"
 
