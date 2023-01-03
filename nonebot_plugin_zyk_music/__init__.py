@@ -11,7 +11,7 @@ from colorama import init, Fore
 from os import remove
 from .work import get_music, get_userid
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 pattern = r"^(?P<source>qq|QQ|酷狗|kg|酷我|kw|咪咕|mg|网易云|网易|wy)点歌 (?P<name>.*)"
 music_matcher = on_regex(pattern, priority=5, permission=GROUP | PRIVATE_FRIEND, block=True)
