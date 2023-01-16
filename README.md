@@ -1,10 +1,18 @@
 # :memo: nonebot_plugin_zyk_music
 
-**本插件是我一个音乐下载工具改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
+**本插件是我另一个项目改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
 
 *:page_facing_up: 使用本插件前请仔细阅读README*
 
-## 安装方式
+## :sparkles: 新版本一览
+### :pushpin: version 0.1.5
+>都更新了哪些内容？
+1. 代码几乎全部重写  ~~从另一个项目复制的~~，优化代码结构
+2. 增加一个音源 *QQVIP*，支持点会员歌曲
+3. QQVIP支持选择音质，具体看后文指令
+4. 增加了两个env配置项，具体看后文env配置
+
+## :cd: 安装方式
 - #### 使用pip
 ```
 pip install nonebot_plugin_zyk_music
@@ -15,15 +23,13 @@ nb plugin install nonebot_plugin_zyk_music
 ```
 
 ## :wrench: env配置
-配置项并不多，只有一个，而且是选填
 
-|       Name       |  Example  |    Type    | Usage  |
-|:----------------:|:---------:|:----------:|:------:|
-| music_proxy_port | None(str) | int or str | 本地代理端口 |
+|       Name       |      Example       | Type |        Usage         | Required |
+|:----------------:|:------------------:|:----:|:--------------------:|:--------:|
+| music_proxy_port |       10809        | int  |    本地代理端口，若有代理则需要    |    No    |
+|    music_path    | path/to/your/music | str  | 音乐保存路径，默认保存在music目录下 |    No    |
+|  music_del_file  |       False        | bool |  是否删除下载的文件，默认为True   |    No    |
 
-当你电脑开了梯子的时候则需要填写代理使用的的本地端口*或使用指令发送给机器人*，并确保开着代理，不然可能请求异常 *（报EOF相关的错误）*
-
-如果你使用了我的另一个插件[nonebot_plugin_zyk_novelai](https://github.com/ZYKsslm/nonebot_plugin_zyk_novelai)，并配置了其本地代理端口时，则本插件不需要再另外配置
 
 ## :bulb: 如何交互
 ![interaction](interaction.gif)
@@ -36,26 +42,6 @@ nb plugin install nonebot_plugin_zyk_music
 - [x] 酷我音乐
 - [x] 咪咕音乐
 
-### 设置本地代理端口
-```
-set_mport:10809
-```
-或直接在env配置文件中填写
- ```
-music_proxy_port=10809
- ```
-
-#### :zap:
-#### 附功能
-无代理模式
-```
-set_mport:None
-```
-或直接在env配置文件中填写
-```
-music_proxy_port=None
-```
-**注意，None开头为大写**
 
 ### QQ点歌
 ```
@@ -63,6 +49,14 @@ qq | QQ点歌 name
 
 例：
     qq点歌 stay
+```
+
+### QQVIP点歌
+```
+qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
+
+例：
+    qq点歌 无损音质 one last kiss
 ```
 
 ### 酷狗点歌
