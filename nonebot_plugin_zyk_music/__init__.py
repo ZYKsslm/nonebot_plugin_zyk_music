@@ -1,84 +1,25 @@
 #!usr/bin/env python3
 # -*- coding: utf-8 -*-
-from nonebot.adapters.onebot.v11 import GROUP, PRIVATE_FRIEND, Event, Bot, Message
+from nonebot.adapters.onebot.v11 import GROUP, PRIVATE_FRIEND, Bot, Message
 from nonebot.log import logger
-from nonebot.permission import SUPERUSER
-from nonebot import on_regex, get_driver
-from nonebot.params import RegexDict, Arg, T_State, RegexGroup
+from nonebot import on_regex
+from nonebot.exception import ActionFailed
+from nonebot.params import RegexDict, Arg, T_State
 
-from fake_useragent import UserAgent
 from colorama import init, Fore
 from os import remove
-from .work import get_music, get_userid
+from .config import proxies, path, if_del
+from .work import *
 
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
-pattern = r"^(?P<source>qq|QQ|酷狗|kg|酷我|kw|咪咕|mg|网易云|网易|wy)点歌 (?P<name>.*)"
+pattern = "^(?P<source>qq|QQ|qqvip|QQVIP|酷狗|kg|酷我|kw|咪咕|mg|网易云|网易|wy)点歌( (?P<br>.*?)音质)? (?P<name>.*)"
 music_matcher = on_regex(pattern, priority=5, permission=GROUP | PRIVATE_FRIEND, block=True)
-set_mport = on_regex(pattern=r'set_mport:(?P<port>.*)', permission=SUPERUSER, priority=5, block=True)
 
 # 字体样式初始化（自动重设字体样式）
 init(autoreset=True)
 
-# 获取全局配置
-try:
-    port = get_driver().config.music_proxy_port
-except AttributeError:
-    try:
-        # 尝试导入我另一个插件的配置
-        port = get_driver().config.novelai_proxy_port
-    except AttributeError:
-        proxies = None
-    else:
-        proxies = {
-            "http://": f"http://127.0.0.1:{port}",
-            "https://": f"http://127.0.0.1:{port}"
-        }
-else:
-    if port == "None":
-        proxies = None
-    else:
-        try:
-            int(port)
-        except ValueError:
-            logger.warning(Fore.LIGHTYELLOW_EX + "配置不规范，获取全局配置失败")
-            proxies = None
-        else:
-            proxies = {
-                "http://": f"http://127.0.0.1:{port}",
-                "https://": f"http://127.0.0.1:{port}"
-            }
-
 logger.success(Fore.LIGHTGREEN_EX + f"成功导入本插件，插件版本为{__version__}")
-
-
-# 设置本地端口
-@set_mport.handle()
-async def _(regex: tuple = RegexGroup()):
-    global port, proxies
-    pt = regex[0]
-
-    # 判断是否为数字
-    try:
-        int(pt)
-    except ValueError:
-        # 取消代理模式
-        if pt == "None":
-            port = pt
-            proxies = None
-            logger.success(Fore.LIGHTCYAN_EX + "成功取消代理模式")
-            await set_mport.finish("成功取消代理模式")
-        else:
-            await set_mport.finish("请输入有效参数！")
-    else:
-        port = pt
-        proxies = {
-            "http://": f"http://127.0.0.1:{port}",
-            "https://": f"http://127.0.0.1:{port}"
-        }
-        logger.success(Fore.LIGHTCYAN_EX + f"当前本地代理端口：{port}")
-
-        await set_mport.finish("本地代理端口设置成功，设置将在下一次请求时启用")
 
 
 @music_matcher.handle()
@@ -86,63 +27,70 @@ async def _(state: T_State, regex: dict = RegexDict()):
     # 保存音乐信息
     source = regex["source"]
     name = regex["name"]
-    state["music_source"] = source
-    state["music_name"] = name
-
-    music_info = await get_music(source=source, name=name, mode="list", proxies=proxies)
-
-    if music_info[0] is False:
-        logger.error(Fore.LIGHTRED_EX + f"'{name}'搜索失败：{music_info[1]}")
-        await music_matcher.finish(f"'{name}'搜索失败")
+    br = regex["br"]
+    if br == "标准":
+        br = 4
+    elif br == "HQ":
+        br = 3
+    elif br == "无损":
+        br = 2
+    elif br == "母带":
+        br = 1
     else:
-        await music_matcher.send(music_info[1])
+        br = 4
+
+    state.update(
+        {
+            "music_source": source,
+            "music_name": name,
+            "br": br
+        }
+    )
+
+    music_info = await get_music(mode="list", source=source, name=name, proxies=proxies)
+
+    await music_matcher.send(music_info, at_sender=True)
 
 
 @music_matcher.got(key="n")
 async def _(bot: Bot, event: Event, state: T_State, n: Message = Arg("n")):
     n = str(n)
     try:
-        int(n)
-    except ValueError:
-        await music_matcher.finish("已取消点歌")
-    else:
         n = int(n)
+    except ValueError:
+        await music_matcher.finish("已取消点歌", at_sender=True)
 
     # 获取音乐信息
     name = state["music_name"]
     source = state["music_source"]
+    br = state["br"]
 
     # 获取会话信息
-    data = get_userid(event)
+    id_ = get_id(event)
 
-    info = await get_music(source=source, name=name, n=n, mode="download", proxies=proxies)
+    await music_matcher.send("正在努力下载，请稍后......", at_sender=True)
+    logger.info(Fore.LIGHTCYAN_EX + f"开始下载'{name}'，音源：{source}")
+    info = await get_music(mode="data", source=source, name=name, proxies=proxies, br=br, path=path, n=n)
 
     if info[0] is False:
-        logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败：{info[1]}")
-        await music_matcher.finish(f"'{name}'获取失败")
-
-    # 获取实际音乐名
-    name = info[2]
-
-    # 下载音乐
-    music_headers = [f"User-Agent={UserAgent().random}"]
-    logger.info(Fore.LIGHTCYAN_EX + f"开始下载'{name}'\nsource={source}")
-
-    try:
-        file = (await bot.download_file(url=info[1], headers=music_headers, thread_count=30))["file"]
-    except Exception as error:
-        logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败：{error}")
-        await music_matcher.finish(f"'{name}'获取失败")
+        logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败")
+        await music_matcher.finish(f"'{name}'获取失败", at_sender=True)
     else:
         logger.success(Fore.LIGHTGREEN_EX + f"'{name}'下载成功")
+        file = info[1]
+        name = info[2]
 
         # 上传音乐
-        if data[0] == "group":
-            await bot.upload_group_file(group_id=data[1], file=file, name=f"{name}.mp3")
-        else:
-            await bot.upload_private_file(user_id=data[1], file=file, name=f"{name}.mp3")
         try:
-            # 删除缓存文件
-            remove(file)
-        except Exception as error:
-            logger.warning(Fore.LIGHTYELLOW_EX + f"缓存文件删除失败：{error}，可手动删除")
+            if id_[0] == "group":
+                await bot.upload_group_file(group_id=id_[1], file=file, name=name)
+            else:
+                await bot.upload_private_file(user_id=id_[1], file=file, name=name)
+        except ActionFailed:
+            await music_matcher.finish("Bot可能被风控或群聊不支持上传文件，请稍后再试")
+        finally:
+            if if_del is True:
+                try:
+                    remove(file)
+                except Exception as error:
+                    logger.warning(Fore.LIGHTYELLOW_EX + f"文件'{file}'删除失败：{error}，可手动删除")
