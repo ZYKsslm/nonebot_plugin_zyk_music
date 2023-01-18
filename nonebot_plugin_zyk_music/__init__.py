@@ -2,19 +2,20 @@
 # -*- coding: utf-8 -*-
 from nonebot.adapters.onebot.v11 import GROUP, PRIVATE_FRIEND, Bot, Message
 from nonebot.log import logger
-from nonebot import on_regex
+from nonebot import on_regex, on_command
 from nonebot.exception import ActionFailed
-from nonebot.params import RegexDict, Arg, T_State
+from nonebot.params import RegexDict, Arg, T_State, CommandArg
 
 from colorama import init, Fore
 from os import remove
-from .config import proxies, path, if_del
+from .config import proxies, path, if_del, song_num
 from .work import *
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 pattern = "^(?P<source>qq|QQ|qqvip|QQVIP|酷狗|kg|酷我|kw|咪咕|mg|网易云|网易|wy)点歌( (?P<br>.*?)音质)? (?P<name>.*)"
 music_matcher = on_regex(pattern, priority=5, permission=GROUP | PRIVATE_FRIEND, block=True)
+impt_songlist = on_command(cmd="导入歌单", priority=5, permission=GROUP | PRIVATE_FRIEND, block=True)
 
 # 字体样式初始化（自动重设字体样式）
 init(autoreset=True)
@@ -80,6 +81,71 @@ async def _(bot: Bot, event: Event, state: T_State, n: Message = Arg("n")):
         file = info[1]
         name = info[2]
 
+        # 上传音乐
+        try:
+            if id_[0] == "group":
+                await bot.upload_group_file(group_id=id_[1], file=file, name=name)
+            else:
+                await bot.upload_private_file(user_id=id_[1], file=file, name=name)
+        except ActionFailed:
+            await music_matcher.finish("Bot可能被风控或群聊不支持上传文件，请稍后再试")
+        finally:
+            if if_del is True:
+                try:
+                    remove(file)
+                except Exception as error:
+                    logger.warning(Fore.LIGHTYELLOW_EX + f"文件'{file}'删除失败：{error}，可手动删除")
+
+
+@impt_songlist.handle()
+async def _(state: T_State, songlist_info: Message = CommandArg()):
+    songlist_info = str(songlist_info)
+    data = await import_songlist(songlist_info, proxies)
+
+    if data is False:
+        await impt_songlist.finish("解析失败，请尝试使用歌单id", at_sender=True)
+    info, song_list, songids = data
+
+    song_info = ""
+    for i in range(len(song_list)):
+        song_info += f"{i + 1}{song_list[i]['name']}-{song_list[i]['singer'][0]['name']}\n"
+
+    try:
+        await impt_songlist.send(f"导入成功\n{info}\n{song_info}", at_sender=True)
+    except ActionFailed:
+        await impt_songlist.send(f"发送失败，Bot可能被风控或歌单太长，尝试发送前{song_num}条")
+        song_info = ""
+        for i in range(song_num):
+            song_info += f"{i + 1}.{song_list[i]['name']}-{song_list[i]['singer'][0]['name']}\n"
+
+        try:
+            await impt_songlist.send(f"导入成功\n{info}\n{song_info}", at_sender=True)
+        except ActionFailed:
+            await impt_songlist.finish("发送失败，Bot可能被风控，请稍后再试")
+
+    state["songids"] = songids
+
+
+@impt_songlist.got(key="s")
+async def _(bot: Bot, state: T_State, event: Event, s: Message = Arg("s")):
+    s = str(s)
+    try:
+        s = int(s)
+    except ValueError:
+        await music_matcher.finish()
+
+    songids = state["songids"]
+    # 获取会话信息
+    id_ = get_id(event)
+
+    await music_matcher.send("正在努力下载，请稍后......", at_sender=True)
+    info = await vip_qq_download(br=3, path=path, proxies=proxies, songid=songids[s-1])
+
+    if info is False:
+        await music_matcher.finish(f"获取失败", at_sender=True)
+    else:
+        file = info[1]
+        name = info[2]
         # 上传音乐
         try:
             if id_[0] == "group":
