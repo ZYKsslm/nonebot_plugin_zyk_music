@@ -38,3 +38,14 @@ else:
         if_del = True
     else:
         if_del = False
+
+# 歌单发送失败时发送的条数
+try:
+    song_num = get_driver().config.music_retry_songnum
+except AttributeError:
+    song_num = 50
+else:
+    try:
+        song_num = int(song_num)
+    except ValueError:
+        song_num = 50
