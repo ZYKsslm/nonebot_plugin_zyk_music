@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="nonebot_plugin_zyk_music",
-    version="0.1.6",
+    version="0.1.6.2",
     packages=find_packages(),
     author="ZSSLM",
     author_email="3119964735@qq.com",
@@ -11,5 +11,5 @@ setup(
     url="https://github.com/ZYKsslm/nonebot_plugin_zyk_music",
     license="MIT License",
     install_requires=["fake_useragent", "httpx", "aiohttp", "colorama", "filetype", "nonebot2", "nonebot_adapter_onebot"],
-    package_data={"nonebot_plugin_zyk_music": ["User-Agent.json", "music"]}
+    package_data={"nonebot_plugin_zyk_music": ["User-Agent.json", "music/*"]}
 )
