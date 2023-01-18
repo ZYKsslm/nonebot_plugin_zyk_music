@@ -5,12 +5,11 @@
 *:page_facing_up: 使用本插件前请仔细阅读README*
 
 ## :sparkles: 新版本一览
-### :pushpin: version 0.1.5
+### :pushpin: version 0.1.6
 >都更新了哪些内容？
-1. 代码几乎全部重写  ~~从另一个项目复制的~~，优化代码结构
-2. 增加一个音源 *QQVIP*，支持点会员歌曲
-3. QQVIP支持选择音质，具体看后文指令
-4. 增加了两个env配置项，具体看后文env配置
+1. 修复了在默认文件保存路径下找不到文件的BUG
+2. 增加导入歌单功能，目前只支持qq音乐的歌单，可直接从歌单点歌
+
 
 ## :cd: 安装方式
 - #### 使用pip
@@ -24,15 +23,21 @@ nb plugin install nonebot_plugin_zyk_music
 
 ## :wrench: env配置
 
-|       Name       |      Example       | Type |        Usage         | Required |
-|:----------------:|:------------------:|:----:|:--------------------:|:--------:|
-| music_proxy_port |       10809        | int  |    本地代理端口，若有代理则需要    |    No    |
-|    music_path    | path/to/your/music | str  | 音乐保存路径，默认保存在music目录下 |    No    |
-|  music_del_file  |       False        | bool |  是否删除下载的文件，默认为True   |    No    |
+|        Name         |      Example       | Type |        Usage         | Required |
+|:-------------------:|:------------------:|:----:|:--------------------:|:--------:|
+|  music_proxy_port   |       10809        | int  |    本地代理端口，若有代理则需要    |    No    |
+|     music_path      | path/to/your/music | str  | 音乐保存路径，默认保存在music目录下 |    No    |
+|   music_del_file    |       False        | bool |  是否删除下载的文件，默认为True   |    No    |
+| music_retry_songnum |         50         | int  |    歌单发送失败时重新发送的条数    |    No    |
 
 
 ## :bulb: 如何交互
+
+### 点歌
 ![interaction](interaction.gif)
+
+### 导入歌单
+![impt_songlist](impt_songlist.gif)
 
 ## :label: 指令
 ### 支持的平台
@@ -47,7 +52,7 @@ nb plugin install nonebot_plugin_zyk_music
 ```
 qq | QQ点歌 name
 
-例：
+eg：
     qq点歌 stay
 ```
 
@@ -55,7 +60,7 @@ qq | QQ点歌 name
 ```
 qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
 
-例：
+eg：
     qq点歌 无损音质 one last kiss
 ```
 
@@ -63,7 +68,7 @@ qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
 ```
 酷狗 | kg点歌 name
 
-例：
+eg：
     kg点歌 stay
 ```
 
@@ -71,7 +76,7 @@ qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
 ```
 酷我 | kw点歌 name
 
-例：
+eg：
     kw点歌 stay
 ```
 
@@ -79,7 +84,7 @@ qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
 ```
 网易云 | 网易 | wy点歌 name
 
-例：
+eg：
     wy点歌 stay
 ```
 
@@ -87,10 +92,17 @@ qqvip | QQVIP点歌 [母带|无损|HQ|标准音质] name
 ```
 咪咕 | mg点歌 name
 
-例：
+eg：
     mg点歌 stay
 ```
 
+### 导入QQ音乐歌单
+```
+(COMMAND_START)导入歌单 歌单id | 歌单链接
+
+eg:
+    /导入歌单 3865449936
+```
 
 
 ---
