@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="nonebot_plugin_zyk_music",
-    version="0.1.5.1",
+    version="0.1.5.2",
     packages=find_packages(),
     author="ZSSLM",
     author_email="3119964735@qq.com",
