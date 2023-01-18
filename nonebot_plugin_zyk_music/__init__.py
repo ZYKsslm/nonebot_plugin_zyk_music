@@ -72,7 +72,7 @@ async def _(bot: Bot, event: Event, state: T_State, n: Message = Arg("n")):
     logger.info(Fore.LIGHTCYAN_EX + f"开始下载'{name}'，音源：{source}")
     info = await get_music(mode="data", source=source, name=name, proxies=proxies, br=br, path=path, n=n)
 
-    if info[0] is False:
+    if info is False:
         logger.error(Fore.LIGHTRED_EX + f"'{name}'获取失败")
         await music_matcher.finish(f"'{name}'获取失败", at_sender=True)
     else:
