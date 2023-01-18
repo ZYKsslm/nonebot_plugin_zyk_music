@@ -16,6 +16,7 @@ kw_api = "http://ovooa.com/API/kwdg/api.php"
 kg_api = "http://ovooa.com/API/kgdg/api.php"
 mg_api = "http://ovooa.com/API/migu/api.php"
 qq_vip_api = "http://ovooa.com/API/QQ_Music"
+qq_songlist_api = "https://c.y.qq.com/v8/fcg-bin/fcg_v8_playlist_cp.fcg?cv=10000&ct=19&newsong=1&tpl=wk&id={}&g_tk=5381&platform=mac&g_tk_new_20200303=5381&loginUin=0&hostUin=0&format=json&inCharset=GB2312&outCharset=utf-8&notice=0&platform=jqspaframe.json&needNewCode=0"
 qq_api = "http://ovooa.com/API/qqdg/api.php"
 wy_api = "http://ovooa.com/API/wydg/api.php"
 
@@ -86,6 +87,40 @@ async def get_music(mode, source, name, proxies, br=None, path=None, n=None):
             return await mg_get_music(name=name, proxies=proxies)
         else:
             return await mg_download(name, n, path, proxies)
+
+
+# 解析歌单
+async def import_songlist(info, proxies):
+    try:
+        songlist_id = int(info)
+    except ValueError:
+        try:
+            songlist_id = findall(r'/(\d+)', info)[0]
+        except IndexError:
+            return False
+
+    headers = {
+        "User-Agent": get_user_agent()
+    }
+    url = qq_songlist_api.format(songlist_id)
+
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+        resp = await client.get(url=url)
+        data = resp.json()["data"]["cdlist"][0]
+
+    song_list = data["songlist"]
+    tags = ""
+    for i in data["tags"]:
+        tags += f":{i['name']}"
+
+    songlist_info = f"歌单名:{data['dissname']}\n" \
+                    f"创建者:{data['nickname']}\n" \
+                    f"简介:{data['desc']}\n" \
+                    f"总歌数:{data['total_song_num']}\n" \
+                    f"浏览人数:{data['visitnum']}\n" \
+                    f"标签:{tags}"
+
+    return songlist_info, song_list, data["songids"].split(",")
 
 
 # 酷我音乐
@@ -314,16 +349,22 @@ async def vip_qq_get_music(name, proxies):
     return choice_list
 
 
-async def vip_qq_download(name, n, br, path, proxies):
+async def vip_qq_download(br, path, proxies, name=None, n=None, songid=None):
     headers = {
         "User-Agent": get_user_agent()
     }
 
-    data = {
-        "msg": name,
-        "n": n,
-        "br": br
-    }
+    if songid is None:
+        data = {
+            "msg": name,
+            "n": n,
+            "br": br
+        }
+    else:
+        data = {
+            "songid": songid,
+            "br": br
+        }
 
     async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
         resp = await client.get(url=qq_vip_api)
