@@ -10,6 +10,6 @@ setup(
     long_description="This is a simple plugin for nonebot2 to pick up music",
     url="https://github.com/ZYKsslm/nonebot_plugin_zyk_music",
     license="MIT License",
-    install_requires=["fake_useragent", "httpx", "aiohttp", "colorama", "filetype", "nonebot2", "nonebot_adapter_onebot"],
+    install_requires=["httpx", "colorama", "filetype", "nonebot2", "nonebot_adapter_onebot"],
     package_data={"nonebot_plugin_zyk_music": ["User-Agent.json", "music/*"]}
 )
