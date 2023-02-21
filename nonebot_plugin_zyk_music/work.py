@@ -6,6 +6,7 @@ from random import choice
 from re import sub, compile, findall
 from filetype import guess
 from nonebot.adapters.onebot.v11 import Event
+from nonebot.log import logger
 
 try:
     from ujson import load, dump
@@ -483,7 +484,9 @@ async def wy_get_music(name, proxies):
         music_info = resp.json()["data"]
 
     choice_list = ""
+    num = 0
     for i in music_info:
+        num += 1
         music_name = i["song"]
         singer_list = i["singers"]
         singer_num = len(singer_list)
@@ -497,7 +500,7 @@ async def wy_get_music(name, proxies):
                     singers += f"{singer_list[s - 1]}、"
         else:
             singers = singer_list[0]
-        choose = f"{i+1}{music_name}-{singers}\n"
+        choose = f"{num}{music_name}-{singers}\n"
         choice_list += choose
 
     return choice_list
@@ -516,14 +519,17 @@ async def wy_download(name, n, path, proxies):
     async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
         resp = await client.get(url=wy_api)
         music_info = resp.json()["data"]
+    logger.info(music_info)
 
     song = set_name(music_info["Music"])
     singer = set_name(music_info["Singer"])
     try:
         music = music_info["dataUrl"]
+        if not music:
+            music = music_info['Url']
     except KeyError:
         return False
-
+    logger.info(music)
     async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
         resp = await client.get(url=music)
         content = resp.content
