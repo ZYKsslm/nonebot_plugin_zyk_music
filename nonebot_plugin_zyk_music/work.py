@@ -3,23 +3,21 @@ from httpx import AsyncClient
 from os import rename
 from os.path import join, abspath, dirname
 from random import choice
-from re import sub, compile, findall
+from re import sub, compile, findall, S
 from filetype import guess
 from nonebot.adapters.onebot.v11 import Event
-from nonebot.log import logger
 
 try:
-    from ujson import load, dump
+    from ujson import load, loads
 except ModuleNotFoundError:
-    from json import load, dump
+    from json import load, loads
 
-kw_api = "http://ovooa.com/API/kwdg/api.php"
-kg_api = "http://ovooa.com/API/kgdg/api.php"
-mg_api = "http://ovooa.com/API/migu/api.php"
-qq_vip_api = "http://ovooa.com/API/QQ_Music"
+kg_api = "http://ovooa.caonm.net/API/kgdg/api.php"
+mg_api = "http://ovooa.caonm.net/API/migu/api.php"
+qq_vip_api = "http://ovooa.caonm.net/API/QQ_Music"
 qq_songlist_api = "https://c.y.qq.com/v8/fcg-bin/fcg_v8_playlist_cp.fcg?cv=10000&ct=19&newsong=1&tpl=wk&id={}&g_tk=5381&platform=mac&g_tk_new_20200303=5381&loginUin=0&hostUin=0&format=json&inCharset=GB2312&outCharset=utf-8&notice=0&platform=jqspaframe.json&needNewCode=0"
-qq_api = "http://ovooa.com/API/qqdg/api.php"
-wy_api = "http://ovooa.com/API/wydg/api.php"
+qq_api = "http://ovooa.caonm.net/API/qqdg/api.php"
+wy_api = "http://ovooa.caonm.net/API/wydg/api.php"
 
 ua_path = join(abspath(dirname(__file__)), "User-Agent.json")
 with open(ua_path, "r") as u:
@@ -52,46 +50,8 @@ def get_user_agent():
     return user_agent
 
 
-async def get_music(mode, source, name, proxies, br=None, path=None, n=None):
-    if source == "酷我" or source == "kw":
-        if mode == "list":
-            return await kw_get_music(name=name, proxies=proxies)
-        else:
-            return await kw_download(name, n, path, proxies)
-
-    elif source == "qq" or source == "QQ":
-        if mode == "list":
-            return await qq_get_music(name=name, proxies=proxies)
-        else:
-            return await qq_download(name, n, path, proxies)
-
-    elif source == "qqvip" or source == "QQVIP":
-        if mode == "list":
-            return await vip_qq_get_music(name=name, proxies=proxies)
-        else:
-            return await vip_qq_download(name, n, br, path, proxies)
-
-    elif source == "酷狗" or source == "kg":
-        if mode == "list":
-            return await kg_get_music(name=name, proxies=proxies)
-        else:
-            return await kg_download(name, n, path, proxies)
-
-    elif source == "网易云" or source == "网易" or source == "wy":
-        if mode == "list":
-            return await wy_get_music(name=name, proxies=proxies)
-        else:
-            return await wy_download(name, n, path, proxies)
-
-    elif source == "咪咕" or source == "mg":
-        if mode == "list":
-            return await mg_get_music(name=name, proxies=proxies)
-        else:
-            return await mg_download(name, n, path, proxies)
-
-
 # 解析歌单
-async def import_songlist(info, proxies):
+async def import_songlist(info):
     try:
         songlist_id = int(info)
     except ValueError:
@@ -105,7 +65,7 @@ async def import_songlist(info, proxies):
     }
     url = qq_songlist_api.format(songlist_id)
 
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=url)
         data = resp.json()["data"]["cdlist"][0]
 
@@ -124,71 +84,8 @@ async def import_songlist(info, proxies):
     return songlist_info, song_list, data["songids"].split(",")
 
 
-# 酷我音乐
-async def kw_get_music(name, proxies):
-    headers = {
-        "User-Agent": get_user_agent()
-    }
-
-    data = {
-        "msg": name,
-        "sc": 50
-    }
-
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
-        resp = await client.get(url=kw_api)
-        music_info = resp.json()["data"]
-
-    choice_list = ""
-    for i in range(len(music_info)):
-        music_name = music_info[i]["song"]
-        singers = music_info[i]["singer"]
-
-        choose = f"{i+1}.{music_name}-{singers}\n"
-        choice_list += choose
-
-    return choice_list
-
-
-async def kw_download(name, n, path, proxies):
-    headers = {
-        "User-Agent": get_user_agent()
-    }
-
-    data = {
-        "msg": name,
-        "n": n,
-    }
-
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
-        resp = await client.get(url=kw_api)
-        music_info = resp.json()["data"]
-
-    song = set_name(music_info["musicname"])
-    singer = set_name(music_info["singer"])
-
-    try:
-        music = music_info["musicurl"]
-    except KeyError:
-        return False
-
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
-        resp = await client.get(url=music)
-        content = resp.content
-
-    kind = guess(content)
-    if kind is None:
-        return False
-
-    file_name = join(path, f"{song}-{singer}.{kind.extension}")
-    with open(file_name, "wb") as f:
-        f.write(content)
-
-    return True, file_name, f"{song}-{singer}.{kind.extension}"
-
-
 # 酷狗音乐
-async def kg_get_music(name, proxies):
+async def kg_get_music(name):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -198,22 +95,22 @@ async def kg_get_music(name, proxies):
         "sc": 50
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=kg_api)
-        music_info = resp.json()["data"]
+        music_info = loads(findall(r'"data": (\[.*\])', resp.text, S)[0])
 
     choice_list = ""
-    for i in range(len(music_info)):
-        music_name = music_info[i]["name"]
-        singers = music_info[i]["singer"]
+    for i, music in enumerate(music_info):
+        music_name = music["name"]
+        singers = music["singer"]
 
         choose = f"{i+1}.{music_name}-{singers}\n"
         choice_list += choose
 
-    return choice_list
+    return choice_list, None
 
 
-async def kg_download(name, n, path, proxies):
+async def kg_download(name, n, path):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -223,12 +120,14 @@ async def kg_download(name, n, path, proxies):
         "n": n,
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=kg_api)
         try:
-            music_info = resp.json()["data"]
-        except KeyError:
+            music_info = resp.json() 
+        except:
             return False
+        else:
+            music_info = music_info["data"]
 
     song = set_name(music_info["song"])
     singer = set_name(music_info["singer"])
@@ -237,7 +136,7 @@ async def kg_download(name, n, path, proxies):
     except KeyError:
         return False
 
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers="MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1", follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=music)
         content = resp.content
 
@@ -253,7 +152,7 @@ async def kg_download(name, n, path, proxies):
 
 
 # 咪咕音乐
-async def mg_get_music(name, proxies):
+async def mg_get_music(name):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -263,22 +162,22 @@ async def mg_get_music(name, proxies):
         "sc": 50
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=mg_api)
         music_info = resp.json()["data"]
 
     choice_list = ""
-    for i in range(len(music_info)):
-        music_name = music_info[i]["song"]
-        singers = music_info[i]["singer"]
+    for i, music in enumerate(music_info):
+        music_name = music["song"]
+        singers = music["singer"]
 
         choose = f"{i+1}.{music_name}-{singers}\n"
         choice_list += choose
 
-    return choice_list
+    return choice_list, None
 
 
-async def mg_download(name, n, path, proxies):
+async def mg_download(name, n, path):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -288,7 +187,7 @@ async def mg_download(name, n, path, proxies):
         "n": n,
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=mg_api)
         music_info = resp.json()["data"]
 
@@ -299,7 +198,7 @@ async def mg_download(name, n, path, proxies):
     except KeyError:
         return False
 
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=music)
         content = resp.content
 
@@ -315,7 +214,7 @@ async def mg_download(name, n, path, proxies):
 
 
 # QQ音乐VIP
-async def vip_qq_get_music(name, proxies):
+async def vip_qq_get_music(name):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -325,51 +224,38 @@ async def vip_qq_get_music(name, proxies):
         "limit": 50
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=qq_vip_api)
         music_info = resp.json()["data"]
 
     choice_list = ""
-    for i in range(len(music_info)):
-        music_name = music_info[i]["song"]
-        singer_list = music_info[i]["singers"]
-        singer_num = len(singer_list)
-        singers = ""
-        if singer_num > 1:
-            for s in range(singer_num):
-                s += 1
-                if s == singer_num:
-                    singers += f"{singer_list[s - 1]}"
-                else:
-                    singers += f"{singer_list[s - 1]}、"
-        else:
-            singers = singer_list[0]
-        choose = f"{i+1}.{music_name}-{singers}\n"
-        choice_list += choose
+    songid_list = []
+    for i, music in enumerate(music_info):
+        music_name = music["song"]
+        singers = music["singer"]
+        songid = music["songid"]
+        songid_list.append(songid)
+        choice_list += f"{i+1}.{music_name}-{singers}\n"
 
-    return choice_list
+    return choice_list, songid_list
 
 
-async def vip_qq_download(br, path, proxies, name=None, n=None, songid=None):
+async def vip_qq_download(br, path, songid):
     headers = {
         "User-Agent": get_user_agent()
     }
 
-    if songid is None:
-        data = {
-            "msg": name,
-            "n": n,
-            "br": br
-        }
-    else:
-        data = {
-            "songid": songid,
-            "br": br
-        }
+    data = {
+        "songid": songid,
+        "br": br
+    }    
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=qq_vip_api)
-        info = resp.json()
+        try:
+            info = resp.json()
+        except:
+            return False
     try:
         music_info = info["data"]
     except KeyError:
@@ -380,7 +266,7 @@ async def vip_qq_download(br, path, proxies, name=None, n=None, songid=None):
     music = music_info["music"]
 
     if br > 2:
-        async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+        async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
             resp = await client.get(url=music)
             content = resp.content
 
@@ -393,7 +279,7 @@ async def vip_qq_download(br, path, proxies, name=None, n=None, songid=None):
             f.write(content)
 
     else:
-        client = AsyncClient(proxies=proxies)
+        client = AsyncClient()
         async with client.stream(method="GET", url=music, headers=headers, follow_redirects=True, timeout=None) as r:
             with open(fr"{path}/{song}-{singer}", "wb+") as f:
                 async for data in r.aiter_bytes(chunk_size=64*1024):
@@ -407,7 +293,7 @@ async def vip_qq_download(br, path, proxies, name=None, n=None, songid=None):
 
 
 # QQ音乐
-async def qq_get_music(name, proxies):
+async def qq_get_music(name):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -417,22 +303,22 @@ async def qq_get_music(name, proxies):
         "sc": 50
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=qq_api)
         music_info = resp.json()["data"]
 
     choice_list = ""
-    for i in range(len(music_info)):
-        music_name = music_info[i]["song"]
-        singers = music_info[i]["singers"]
+    for i, music in enumerate(music_info):
+        music_name = music["song"]
+        singers = music["singers"]
 
         choose = f"{i+1}.{music_name}-{singers}\n"
         choice_list += choose
 
-    return choice_list
+    return choice_list, None
 
 
-async def qq_download(name, n, path, proxies):
+async def qq_download(name, n, path):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -441,7 +327,7 @@ async def qq_download(name, n, path, proxies):
         "msg": name,
         "n": n
     }
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=qq_api)
         info = resp.json()
     try:
@@ -453,23 +339,19 @@ async def qq_download(name, n, path, proxies):
     singer = set_name(music_info["Singer"])
     music = music_info["Url"]
 
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=music)
         content = resp.content
 
-    kind = guess(content)
-    if kind is None:
-        return False
-
-    file_name = join(path, f"{song}-{singer}.{kind.extension}")
+    file_name = join(path, f"{song}-{singer}.mp3")
     with open(file_name, "wb") as f:
         f.write(content)
 
-    return True, file_name, f"{song}-{singer}.{kind.extension}"
+    return True, file_name, f"{song}-{singer}.mp3"
 
 
 # 网易云音乐
-async def wy_get_music(name, proxies):
+async def wy_get_music(name):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -479,34 +361,27 @@ async def wy_get_music(name, proxies):
         "sc": 50
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=wy_api)
         music_info = resp.json()["data"]
 
     choice_list = ""
-    num = 0
-    for i in music_info:
-        num += 1
-        music_name = i["song"]
-        singer_list = i["singers"]
+    for i, music in enumerate(music_info):
+        music_name = music["song"]
+        singer_list = music["singers"]
         singer_num = len(singer_list)
         singers = ""
         if singer_num > 1:
-            for s in range(singer_num):
-                s += 1
-                if s == singer_num:
-                    singers += f"{singer_list[s - 1]}"
-                else:
-                    singers += f"{singer_list[s - 1]}、"
+            singers = "、".join([f"{singer[s - 1]}" for s, singer in enumerate(singer_list)])
         else:
             singers = singer_list[0]
-        choose = f"{num}{music_name}-{singers}\n"
+        choose = f"{i+1}.{music_name}-{singers}\n"
         choice_list += choose
 
-    return choice_list
+    return choice_list, None
 
 
-async def wy_download(name, n, path, proxies):
+async def wy_download(name, n, path):
     headers = {
         "User-Agent": get_user_agent()
     }
@@ -516,21 +391,18 @@ async def wy_download(name, n, path, proxies):
         "n": n,
     }
 
-    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None, proxies=proxies) as client:
+    async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=wy_api)
         music_info = resp.json()["data"]
-    logger.info(music_info)
 
     song = set_name(music_info["Music"])
     singer = set_name(music_info["Singer"])
     try:
-        music = music_info["dataUrl"]
-        if not music:
-            music = music_info['Url']
+        music = music_info["Url"]
     except KeyError:
         return False
-    logger.info(music)
-    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None, proxies=proxies) as client:
+
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=music)
         content = resp.content
 
@@ -543,3 +415,36 @@ async def wy_download(name, n, path, proxies):
         f.write(content)
 
     return True, file_name, f"{song}-{singer}.{kind.extension}"
+
+
+# 定义一个字典，存储不同的音乐源和对应的函数
+music_sources = {
+    "qq": (qq_get_music, qq_download),
+    "QQ": (qq_get_music, qq_download),
+    "qqvip": (vip_qq_get_music, vip_qq_download),
+    "QQVIP": (vip_qq_get_music, vip_qq_download),
+    "酷狗": (kg_get_music, kg_download),
+    "kg": (kg_get_music, kg_download),
+    "网易云": (wy_get_music, wy_download),
+    "网易": (wy_get_music, wy_download),
+    "wy": (wy_get_music, wy_download),
+    "咪咕": (mg_get_music, mg_download),
+    "mg": (mg_get_music, mg_download)
+}
+
+# 定义一个列表或者集合，存储需要音质参数的音乐源
+vip_sources = {"qqvip", "QQVIP"}
+
+async def get_music(source, name=None, songid=None, br=None, path=None, n=None):
+    # 从字典中获取对应的函数
+    get_data, download_data = music_sources[source]
+    
+    if (songid is None) and (n is None):
+        # 调用下载音乐的函数
+        return await get_data(name=name)
+    else:
+        # 判断是否需要传入音质参数
+        if source in vip_sources:
+            return await download_data(br, path, songid)
+        else:
+            return await download_data(name, n, path)
