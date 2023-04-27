@@ -3,23 +3,6 @@ from os.path import join, abspath, dirname
 
 
 # 获取全局配置
-# 获取本地代理端口
-try:
-    port = get_driver().config.music_proxy_port
-except AttributeError:
-    port = None
-    proxies = None
-else:
-    try:
-        int(port)
-    except ValueError:
-        port = None
-        proxies = None
-    else:
-        proxies = {
-            "http://": f"http://127.0.0.1:{port}",
-            "https://": f"http://127.0.0.1:{port}"
-        }
 
 # 获取文件路径
 try:
