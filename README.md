@@ -5,10 +5,10 @@
 *:page_facing_up: 使用本插件前请仔细阅读README*
 
 ## :sparkles: 新版本一览
-### :pushpin: version 0.1.6
+### :pushpin: version 0.1.7
 >都更新了哪些内容？
-1. 修复了在默认文件保存路径下找不到文件的BUG
-2. 增加导入歌单功能，目前只支持qq音乐的歌单，可直接从歌单点歌
+1. 删去酷我音乐接口
+2. 全面更新代码，更换接口
 
 
 ## :cd: 安装方式
@@ -25,7 +25,6 @@ nb plugin install nonebot_plugin_zyk_music
 
 |        Name         |      Example       | Type |        Usage         | Required |
 |:-------------------:|:------------------:|:----:|:--------------------:|:--------:|
-|  music_proxy_port   |       10809        | int  |    本地代理端口，若有代理则需要    |    No    |
 |     music_path      | path/to/your/music | str  | 音乐保存路径，默认保存在music目录下 |    No    |
 |   music_del_file    |       False        | bool |  是否删除下载的文件，默认为True   |    No    |
 | music_retry_songnum |         50         | int  |    歌单发送失败时重新发送的条数    |    No    |
@@ -44,7 +43,6 @@ nb plugin install nonebot_plugin_zyk_music
 - [x] QQ音乐
 - [x] 网易云音乐
 - [x] 酷狗音乐
-- [x] 酷我音乐
 - [x] 咪咕音乐
 
 
@@ -70,14 +68,6 @@ eg：
 
 eg：
     kg点歌 stay
-```
-
-### 酷我点歌
-```
-酷我 | kw点歌 name
-
-eg：
-    kw点歌 stay
 ```
 
 ### 网易云点歌
