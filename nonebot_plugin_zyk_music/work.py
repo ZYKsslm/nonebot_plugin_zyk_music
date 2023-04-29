@@ -136,7 +136,7 @@ async def kg_download(name, n, path):
     except KeyError:
         return False
 
-    async with AsyncClient(headers="MQQBrowser/26 Mozilla/5.0 (Linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1", follow_redirects=True, timeout=None) as client:
+    async with AsyncClient(headers=headers, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=music)
         content = resp.content
 
