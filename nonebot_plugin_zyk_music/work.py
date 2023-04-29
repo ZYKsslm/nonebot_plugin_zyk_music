@@ -164,7 +164,7 @@ async def mg_get_music(name):
 
     async with AsyncClient(headers=headers, params=data, follow_redirects=True, timeout=None) as client:
         resp = await client.get(url=mg_api)
-        music_info = resp.json()["data"]
+        music_info = loads(findall(r'"data": (\[.*\]),', resp.text, S)[0])
 
     choice_list = ""
     for i, music in enumerate(music_info):
