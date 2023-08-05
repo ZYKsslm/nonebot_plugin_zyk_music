@@ -1,5 +1,7 @@
 # :memo: nonebot_plugin_zyk_music
 
+## 由于接口跑路，这个项目暂时废了，我会尽快解决，现在先暂停维护
+
 **本插件是我另一个项目改的，有兴趣的话可以去看看[BlackStone_Music_GUI](https://github.com/ZYKsslm/BlackStone_Music_GUI)**
 
 *:page_facing_up: 使用本插件前请仔细阅读README*
