@@ -370,7 +370,6 @@ async def wy_get_music(name):
         music_name = music["song"]
         singer_list = music["singers"]
         singer_num = len(singer_list)
-        singers = ""
         if singer_num > 1:
             singers = "、".join([f"{singer[s - 1]}" for s, singer in enumerate(singer_list)])
         else:
@@ -434,6 +433,7 @@ music_sources = {
 
 # 定义一个列表或者集合，存储需要音质参数的音乐源
 vip_sources = {"qqvip", "QQVIP"}
+
 
 async def get_music(source, name=None, songid=None, br=None, path=None, n=None):
     # 从字典中获取对应的函数
